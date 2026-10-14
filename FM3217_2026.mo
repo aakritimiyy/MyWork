@@ -22,9 +22,9 @@ package FM3217_2026 "Collection of models as created in FM3217"
 
   package Tutorial2
     model Motor
-      Modelica.Electrical.Analog.Basic.Resistor resistor
+      Modelica.Electrical.Analog.Basic.Resistor resistor(R=0.5)
         annotation (Placement(transformation(extent={{-64,30},{-44,50}})));
-      Modelica.Electrical.Analog.Basic.Inductor inductor
+      Modelica.Electrical.Analog.Basic.Inductor inductor(L=0.05)
         annotation (Placement(transformation(extent={{-28,30},{-8,50}})));
       Modelica.Electrical.Analog.Basic.RotationalEMF emf
         annotation (Placement(transformation(extent={{2,-8},{22,12}})));
@@ -35,7 +35,7 @@ package FM3217_2026 "Collection of models as created in FM3217"
             extent={{-10,10},{10,-10}},
             rotation=270,
             origin={-76,2})));
-      Modelica.Mechanics.Rotational.Components.Inertia inertia
+      Modelica.Mechanics.Rotational.Components.Inertia inertia(J=0.001)
         annotation (Placement(transformation(extent={{40,-8},{60,12}})));
       Modelica.Blocks.Interfaces.RealInput u
         annotation (Placement(transformation(extent={{-146,-18},{-106,22}})));
@@ -65,9 +65,43 @@ package FM3217_2026 "Collection of models as created in FM3217"
 
     model MotorDrive
       Motor motor
-        annotation (Placement(transformation(extent={{-8,-10},{12,10}})));
+        annotation (Placement(transformation(extent={{2,-10},{22,10}})));
+      Modelica.Blocks.Sources.Step step(startTime=0.5)
+        annotation (Placement(transformation(extent={{-92,-10},{-72,10}})));
+      Modelica.Blocks.Math.Feedback feedback
+        annotation (Placement(transformation(extent={{-60,-10},{-40,10}})));
+      Modelica.Blocks.Continuous.PID PID(
+        k=10,
+        Ti=2,
+        Td=0.01)
+        annotation (Placement(transformation(extent={{-28,-10},{-8,10}})));
+      Modelica.Mechanics.Rotational.Components.IdealGear idealGear(ratio=100)
+        annotation (Placement(transformation(extent={{32,-10},{52,10}})));
+      Modelica.Mechanics.Rotational.Components.Inertia inertia(J=5)
+        annotation (Placement(transformation(extent={{62,-10},{82,10}})));
+      Modelica.Mechanics.Rotational.Sensors.AngleSensor angleSensor annotation (
+         Placement(transformation(
+            extent={{10,-10},{-10,10}},
+            rotation=0,
+            origin={74,-34})));
+    equation
+      connect(feedback.u1, step.y)
+        annotation (Line(points={{-58,0},{-71,0}}, color={0,0,127}));
+      connect(feedback.y, PID.u)
+        annotation (Line(points={{-41,0},{-30,0}}, color={0,0,127}));
+      connect(PID.y, motor.u) annotation (Line(points={{-7,0},{-4,0},{-4,0.2},{
+              -0.6,0.2}}, color={0,0,127}));
+      connect(motor.flange, idealGear.flange_a) annotation (Line(points={{21.4,
+              0.2},{26,0.2},{26,0},{32,0}}, color={0,0,0}));
+      connect(idealGear.flange_b, inertia.flange_a)
+        annotation (Line(points={{52,0},{62,0}}, color={0,0,0}));
+      connect(angleSensor.phi, feedback.u2) annotation (Line(points={{63,-34},{
+              -50,-34},{-50,-8}}, color={0,0,127}));
+      connect(inertia.flange_b, angleSensor.flange) annotation (Line(points={{
+              82,0},{94,0},{94,-34},{84,-34}}, color={0,0,0}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
-            coordinateSystem(preserveAspectRatio=false)));
+            coordinateSystem(preserveAspectRatio=false)),
+        experiment(StopTime=100));
     end MotorDrive;
   end Tutorial2;
   annotation (uses(Modelica(version="4.0.0")));
